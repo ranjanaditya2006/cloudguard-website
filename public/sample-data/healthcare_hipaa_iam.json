@@ -1,0 +1,171 @@
+{
+  "name": "HealthCare Cloud Electronic Health Records (HIPAA)",
+  "cloudProvider": "AWS",
+  "sourceType": "uploaded",
+  "loadedAt": "2026-09-28T11:33:57.491Z",
+  "principals": [
+    {
+      "id": "usr-dr-sharma",
+      "name": "dr-arun-sharma-cardio",
+      "type": "User",
+      "provider": "AWS",
+      "department": "Clinical Cardiology",
+      "arn": "arn:aws:iam::552199201940:user/dr-arun-sharma",
+      "lastActiveTimestamp": "2026-09-27T11:33:57.491Z",
+      "daysInactive": 1,
+      "accessKeysCount": 1,
+      "unrotatedKeysCount": 0,
+      "mfaEnabled": true,
+      "attachedPolicies": [
+        "DoctorEHRReadOnly"
+      ],
+      "grantedPermissions": [
+        {
+          "id": "hp-1",
+          "service": "dynamodb",
+          "action": "dynamodb:GetItem",
+          "isUsed": true
+        },
+        {
+          "id": "hp-2",
+          "service": "s3",
+          "action": "s3:GetObject",
+          "isUsed": true
+        }
+      ]
+    },
+    {
+      "id": "usr-telehealth-temp",
+      "name": "telehealth-consultant-dormant",
+      "type": "User",
+      "provider": "AWS",
+      "department": "Remote Telehealth Contractors",
+      "arn": "arn:aws:iam::552199201940:user/telehealth-consultant-dormant",
+      "lastActiveTimestamp": "2026-06-10T11:33:57.491Z",
+      "daysInactive": 110,
+      "accessKeysCount": 1,
+      "unrotatedKeysCount": 1,
+      "mfaEnabled": false,
+      "attachedPolicies": [
+        "TelehealthFullAccess",
+        "DatabaseFullAccess"
+      ],
+      "grantedPermissions": [
+        {
+          "id": "hp-10",
+          "service": "rds",
+          "action": "rds:*",
+          "isUsed": false,
+          "isDangerous": true
+        },
+        {
+          "id": "hp-11",
+          "service": "s3",
+          "action": "s3:*",
+          "isUsed": false,
+          "isDangerous": true
+        },
+        {
+          "id": "hp-12",
+          "service": "iam",
+          "action": "iam:PassRole",
+          "isUsed": false,
+          "isDangerous": true
+        }
+      ]
+    },
+    {
+      "id": "role-radiology-sync",
+      "name": "RadiologyPACS-SyncRole",
+      "type": "Role",
+      "provider": "AWS",
+      "department": "Imaging Diagnostic Systems",
+      "arn": "arn:aws:iam::552199201940:role/RadiologyPACS-SyncRole",
+      "lastActiveTimestamp": "2026-09-24T11:33:57.491Z",
+      "daysInactive": 4,
+      "accessKeysCount": 0,
+      "unrotatedKeysCount": 0,
+      "mfaEnabled": true,
+      "attachedPolicies": [
+        "ImagingStoragePolicy"
+      ],
+      "grantedPermissions": [
+        {
+          "id": "hp-20",
+          "service": "s3",
+          "action": "s3:PutObject",
+          "isUsed": true
+        },
+        {
+          "id": "hp-21",
+          "service": "s3",
+          "action": "s3:GetObject",
+          "isUsed": true
+        },
+        {
+          "id": "hp-22",
+          "service": "sts",
+          "action": "sts:AssumeRole",
+          "isUsed": true,
+          "isDangerous": true
+        }
+      ]
+    }
+  ],
+  "resources": [
+    {
+      "id": "res-ehr-patient-db",
+      "name": "hipaa-patient-records-sql",
+      "type": "RDSInstance",
+      "provider": "AWS",
+      "sensitivity": "CRITICAL",
+      "isCrownJewel": true,
+      "arn": "arn:aws:rds:us-east-1:552199201940:db:hipaa-patient-records-sql",
+      "description": "Electronic Health Records (EHR) containing patient medical histories and diagnosis reports (HIPAA/HITECH)."
+    },
+    {
+      "id": "res-mri-dicom-bucket",
+      "name": "hospital-dicom-mri-scans",
+      "type": "S3Bucket",
+      "provider": "AWS",
+      "sensitivity": "CRITICAL",
+      "isCrownJewel": true,
+      "arn": "arn:aws:s3:::hospital-dicom-mri-scans",
+      "description": "High-resolution DICOM MRI/CT scan archive."
+    }
+  ],
+  "edges": [
+    {
+      "id": "he-1",
+      "source": "usr-telehealth-temp",
+      "target": "res-ehr-patient-db",
+      "type": "CAN_ACCESS",
+      "label": "Direct Wildcard RDS Access",
+      "permissions": [
+        "rds:*"
+      ],
+      "isEscalationVector": true
+    },
+    {
+      "id": "he-2",
+      "source": "role-radiology-sync",
+      "target": "res-mri-dicom-bucket",
+      "type": "CAN_ACCESS",
+      "label": "Store DICOM Scans",
+      "permissions": [
+        "s3:PutObject",
+        "s3:GetObject"
+      ]
+    }
+  ],
+  "cloudTrailEvents": [
+    {
+      "eventId": "hev-1",
+      "principalId": "usr-dr-sharma",
+      "action": "GetItem",
+      "service": "dynamodb",
+      "timestamp": "2026-09-27T09:15:00Z",
+      "sourceIp": "10.0.12.44"
+    }
+  ]
+}
